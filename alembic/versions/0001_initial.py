@@ -1,6 +1,7 @@
 """initial schema"""
 
 import sqlalchemy as sa
+from sqlalchemy.dialects import postgresql
 
 from alembic import op
 
@@ -9,7 +10,12 @@ down_revision = None
 branch_labels = None
 depends_on = None
 
-match_status = sa.Enum("finished", "scheduled", name="match_status")
+match_status = postgresql.ENUM(
+    "finished",
+    "scheduled",
+    name="match_status",
+    create_type=False,
+)
 
 
 def upgrade() -> None:
