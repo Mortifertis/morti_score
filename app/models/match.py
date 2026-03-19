@@ -23,7 +23,13 @@ class Match(Base):
     match_date: Mapped[date] = mapped_column(Date, nullable=False)
     season: Mapped[str] = mapped_column(String(20), nullable=False)
     status: Mapped[MatchStatus] = mapped_column(
-        Enum(MatchStatus, name="match_status"),
+        Enum(
+            MatchStatus,
+            name="match_status",
+            values_callable=lambda enum_cls: [
+                status.value for status in enum_cls
+            ],
+        ),
         nullable=False,
         default=MatchStatus.SCHEDULED,
     )
