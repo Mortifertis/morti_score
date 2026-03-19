@@ -1,7 +1,7 @@
 import pytest
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_teams_endpoint_returns_seeded_data(client):
     response = await client.get("/api/v1/teams")
     assert response.status_code == 200

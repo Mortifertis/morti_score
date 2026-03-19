@@ -1,3 +1,5 @@
+from typing import Literal
+
 from fastapi import APIRouter, Depends, Query
 
 from app.api.deps import get_match_service
@@ -13,6 +15,7 @@ async def list_matches(
     status: MatchStatus | None = Query(default=None),
     team_id: int | None = Query(default=None, gt=0),
     season: str | None = Query(default=None),
+    sort_order: Literal["asc", "desc"] = Query(default="desc"),
     limit: int = Query(default=100, ge=1, le=500),
     service: MatchService = Depends(get_match_service),
 ) -> list[MatchRead]:
@@ -20,6 +23,7 @@ async def list_matches(
         status=status,
         team_id=team_id,
         season=season,
+        sort_order=sort_order,
         limit=limit,
     )
 

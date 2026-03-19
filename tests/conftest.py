@@ -1,5 +1,3 @@
-import asyncio
-
 import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import (
@@ -18,10 +16,8 @@ TEST_DATABASE_URL = "sqlite+aiosqlite:///./test.db"
 
 
 @pytest.fixture(scope="session")
-def event_loop():
-    loop = asyncio.new_event_loop()
-    yield loop
-    loop.close()
+def anyio_backend() -> str:
+    return "asyncio"
 
 
 @pytest.fixture(scope="session")

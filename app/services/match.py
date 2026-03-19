@@ -1,8 +1,12 @@
+from typing import Literal
+
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import MatchStatus
 from app.repositories.match import MatchRepository
+
+SortOrder = Literal["asc", "desc"]
 
 
 class MatchService:
@@ -15,12 +19,14 @@ class MatchService:
         status: MatchStatus | None = None,
         team_id: int | None = None,
         season: str | None = None,
+        sort_order: SortOrder = "desc",
         limit: int = 100,
     ):
         return await self.repository.list_matches(
             status=status,
             team_id=team_id,
             season=season,
+            sort_order=sort_order,
             limit=limit,
         )
 

@@ -27,6 +27,7 @@ class TeamMetrics:
 
 class PredictionService:
     MODEL_NAME = "basic_poisson"
+    MIN_HISTORICAL_MATCHES = 10
 
     def __init__(self, session: AsyncSession, cache_ttl: int = 300) -> None:
         self.session = session
@@ -39,11 +40,7 @@ class PredictionService:
         home_team_id: int,
         away_team_id: int,
     ) -> PredictionRead:
-        if home_team_id == away_team_id:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Teams must be different",
-            )
+        self._validate_distinct_teams(home_team_id, away_team_id)
         redis = await get_redis()
         cache_key = f"prediction:{home_team_id}:{away_team_id}"
         cached = await redis.get(cache_key)
@@ -52,27 +49,64 @@ class PredictionService:
 
         home_team = await self.team_repository.get_team(home_team_id)
         away_team = await self.team_repository.get_team(away_team_id)
-        if home_team is None or away_team is None:
-            raise HTTPException(
+        if home_team is None:
+            self._raise_prediction_error(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="One or both teams not found",
+                code="home_team_not_found",
+                message="Home team not found.",
+            )
+        if away_team is None:
+            self._raise_prediction_error(
+                status_code=status.HTTP_404_NOT_FOUND,
+                code="away_team_not_found",
+                message="Away team not found.",
             )
 
         matches = await self.match_repository.list_matches(
             status=MatchStatus.FINISHED,
             limit=1000,
         )
-        if len(matches) < 10:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Not enough historical match data",
+        if not matches:
+            self._raise_prediction_error(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                code="no_finished_matches",
+                message=(
+                    "Prediction is unavailable because there are no finished "
+                    "matches to analyze."
+                ),
+            )
+        if len(matches) < self.MIN_HISTORICAL_MATCHES:
+            self._raise_prediction_error(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                code="insufficient_historical_matches",
+                message=(
+                    "Prediction needs more finished matches before the model "
+                    "can be used."
+                ),
+                extra={
+                    "historical_matches": len(matches),
+                    "minimum_required": self.MIN_HISTORICAL_MATCHES,
+                },
             )
 
         metrics = self._build_metrics(matches)
-        if home_team_id not in metrics or away_team_id not in metrics:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Not enough data for one or both teams",
+        if home_team_id not in metrics:
+            self._raise_prediction_error(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                code="insufficient_home_team_history",
+                message=(
+                    "Home team does not have enough historical matches for "
+                    "prediction."
+                ),
+            )
+        if away_team_id not in metrics:
+            self._raise_prediction_error(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                code="insufficient_away_team_history",
+                message=(
+                    "Away team does not have enough historical matches for "
+                    "prediction."
+                ),
             )
 
         league_home_goals = sum(
@@ -93,6 +127,10 @@ class PredictionService:
             league_away_goals
             * away_metrics.away_attack
             * home_metrics.home_defense
+        )
+        self._validate_expected_goals(
+            expected_home_goals=expected_home_goals,
+            expected_away_goals=expected_away_goals,
         )
         probabilities, top_scorelines = self._score_matrix(
             expected_home_goals,
@@ -117,11 +155,58 @@ class PredictionService:
         )
         return payload
 
+    def _validate_distinct_teams(
+        self,
+        home_team_id: int,
+        away_team_id: int,
+    ) -> None:
+        if home_team_id == away_team_id:
+            self._raise_prediction_error(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                code="same_team_matchup",
+                message="Home and away teams must be different.",
+            )
+
+    def _validate_expected_goals(
+        self,
+        *,
+        expected_home_goals: float,
+        expected_away_goals: float,
+    ) -> None:
+        values = (expected_home_goals, expected_away_goals)
+        if any(not math.isfinite(value) or value < 0 for value in values):
+            self._raise_prediction_error(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                code="invalid_expected_goals",
+                message=(
+                    "Prediction model could not calculate expected goals "
+                    "for the selected teams."
+                ),
+            )
+
+    def _raise_prediction_error(
+        self,
+        *,
+        status_code: int,
+        code: str,
+        message: str,
+        extra: dict[str, int] | None = None,
+    ) -> None:
+        detail: dict[str, object] = {
+            "code": code,
+            "message": message,
+        }
+        if extra:
+            detail.update(extra)
+        raise HTTPException(status_code=status_code, detail=detail)
+
     def _build_metrics(self, matches) -> dict[int, TeamMetrics]:
         aggregates: dict[int, dict[str, float]] = {}
+        valid_matches_count = 0
         for match in matches:
             if match.home_goals is None or match.away_goals is None:
                 continue
+            valid_matches_count += 1
             home = aggregates.setdefault(
                 match.home_team_id,
                 {
@@ -151,12 +236,17 @@ class PredictionService:
             away["away_scored"] += match.away_goals
             away["away_conceded"] += match.home_goals
 
-        league_home_avg = sum(
-            match.home_goals or 0 for match in matches
-        ) / len(matches)
-        league_away_avg = sum(
-            match.away_goals or 0 for match in matches
-        ) / len(matches)
+        if valid_matches_count == 0:
+            return {}
+
+        league_home_avg = (
+            sum(match.home_goals or 0 for match in matches)
+            / valid_matches_count
+        )
+        league_away_avg = (
+            sum(match.away_goals or 0 for match in matches)
+            / valid_matches_count
+        )
         metrics: dict[int, TeamMetrics] = {}
         for team_id, values in aggregates.items():
             if values["home_played"] == 0 or values["away_played"] == 0:

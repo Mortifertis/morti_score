@@ -15,12 +15,19 @@ class MatchRepository:
         status: MatchStatus | None = None,
         team_id: int | None = None,
         season: str | None = None,
+        sort_order: str = "desc",
         limit: int = 100,
     ) -> list[Match]:
+        order_by = Match.match_date.desc()
+        id_order = Match.id.desc()
+        if sort_order == "asc":
+            order_by = Match.match_date.asc()
+            id_order = Match.id.asc()
+
         stmt: Select[tuple[Match]] = (
             select(Match)
             .options(joinedload(Match.home_team), joinedload(Match.away_team))
-            .order_by(Match.match_date.desc(), Match.id.desc())
+            .order_by(order_by, id_order)
             .limit(limit)
         )
         if status is not None:
