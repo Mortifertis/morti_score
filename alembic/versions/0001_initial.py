@@ -12,7 +12,7 @@ depends_on = None
 
 
 def upgrade() -> None:
-        match_status_enum = postgresql.ENUM(
+    match_status_enum = postgresql.ENUM(
         "finished",
         "scheduled",
         name="match_status",
