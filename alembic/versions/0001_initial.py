@@ -10,17 +10,16 @@ down_revision = None
 branch_labels = None
 depends_on = None
 
-match_status = postgresql.ENUM(
-    "finished",
-    "scheduled",
-    name="match_status",
-    create_type=False,
-)
-
 
 def upgrade() -> None:
-    bind = op.get_bind()
-    match_status.create(bind, checkfirst=True)
+        match_status_enum = postgresql.ENUM(
+        "finished",
+        "scheduled",
+        name="match_status",
+        create_type=False,
+    )
+    match_status_enum.create(op.get_bind(), checkfirst=True)
+
     op.create_table(
         "teams",
         sa.Column("id", sa.Integer(), primary_key=True),
@@ -31,11 +30,12 @@ def upgrade() -> None:
         sa.Column(
             "created_at",
             sa.DateTime(timezone=True),
-            server_default=sa.func.now(),
+            server_default=sa.text("now()"),
             nullable=False,
         ),
     )
     op.create_index("ix_teams_id", "teams", ["id"])
+
     op.create_table(
         "matches",
         sa.Column("id", sa.Integer(), primary_key=True),
@@ -45,17 +45,18 @@ def upgrade() -> None:
         sa.Column("away_goals", sa.Integer(), nullable=True),
         sa.Column("match_date", sa.Date(), nullable=False),
         sa.Column("season", sa.String(length=20), nullable=False),
-        sa.Column("status", match_status, nullable=False),
+        sa.Column("status", match_status_enum, nullable=False),
         sa.Column(
             "created_at",
             sa.DateTime(timezone=True),
-            server_default=sa.func.now(),
+            server_default=sa.text("now()"),
             nullable=False,
         ),
         sa.ForeignKeyConstraint(["away_team_id"], ["teams.id"]),
         sa.ForeignKeyConstraint(["home_team_id"], ["teams.id"]),
     )
     op.create_index("ix_matches_id", "matches", ["id"])
+
     op.create_table(
         "standings",
         sa.Column("id", sa.Integer(), primary_key=True),
@@ -65,7 +66,10 @@ def upgrade() -> None:
         sa.Column("draws", sa.Integer(), nullable=False, server_default="0"),
         sa.Column("losses", sa.Integer(), nullable=False, server_default="0"),
         sa.Column(
-            "goals_for", sa.Integer(), nullable=False, server_default="0"
+            "goals_for",
+            sa.Integer(),
+            nullable=False,
+            server_default="0",
         ),
         sa.Column(
             "goals_against",
@@ -83,7 +87,7 @@ def upgrade() -> None:
         sa.Column(
             "updated_at",
             sa.DateTime(timezone=True),
-            server_default=sa.func.now(),
+            server_default=sa.text("now()"),
             nullable=False,
         ),
         sa.ForeignKeyConstraint(["team_id"], ["teams.id"]),
@@ -98,4 +102,11 @@ def downgrade() -> None:
     op.drop_table("matches")
     op.drop_index("ix_teams_id", table_name="teams")
     op.drop_table("teams")
-    match_status.drop(op.get_bind(), checkfirst=True)
+
+    match_status_enum = postgresql.ENUM(
+        "finished",
+        "scheduled",
+        name="match_status",
+        create_type=False,
+    )
+    match_status_enum.drop(op.get_bind(), checkfirst=True)
