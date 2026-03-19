@@ -1,0 +1,10 @@
+[
+  {"id": 1, "name": "Arsenal", "short_name": "ARS", "country": "England", "league": "Premier League"},
+  {"id": 2, "name": "Chelsea", "short_name": "CHE", "country": "England", "league": "Premier League"},
+  {"id": 3, "name": "Liverpool", "short_name": "LIV", "country": "England", "league": "Premier League"},
+  {"id": 4, "name": "Manchester City", "short_name": "MCI", "country": "England", "league": "Premier League"},
+  {"id": 5, "name": "Tottenham", "short_name": "TOT", "country": "England", "league": "Premier League"},
+  {"id": 6, "name": "Newcastle United", "short_name": "NEW", "country": "England", "league": "Premier League"},
+  {"id": 7, "name": "Brighton", "short_name": "BHA", "country": "England", "league": "Premier League"},
+  {"id": 8, "name": "Aston Villa", "short_name": "AVL", "country": "England", "league": "Premier League"}
+]

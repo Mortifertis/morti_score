@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Football Analytics Platform</title>
+    <link rel="stylesheet" href="/static/css/styles.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Deployable MVP</p>
+        <h1>Football Analytics Platform</h1>
+        <p>
+          Explore demo teams, recent matches, standings, and a simple
+          Poisson-based match prediction model.
+        </p>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="card">
+        <h2>Prediction sandbox</h2>
+        <form method="post" action="/dashboard" class="prediction-form">
+          <label>
+            Home team
+            <select name="home_team_id" required>
+              {% for team in teams %}
+              <option value="{{ team.id }}">{{ team.name }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <label>
+            Away team
+            <select name="away_team_id" required>
+              {% for team in teams %}
+              <option value="{{ team.id }}">{{ team.name }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <button type="submit">Predict</button>
+        </form>
+
+        {% if prediction %}
+        <div class="prediction-result">
+          <h3>{{ prediction.home_team.name }} vs {{ prediction.away_team.name }}</h3>
+          <p>
+            Expected goals:
+            <strong>
+              {{ prediction.expected_home_goals }} -
+              {{ prediction.expected_away_goals }}
+            </strong>
+          </p>
+          <ul>
+            <li>Home win: {{ (prediction.probabilities.home_win * 100) | round(1) }}%</li>
+            <li>Draw: {{ (prediction.probabilities.draw * 100) | round(1) }}%</li>
+            <li>Away win: {{ (prediction.probabilities.away_win * 100) | round(1) }}%</li>
+          </ul>
+          <h4>Top scorelines</h4>
+          <ol>
+            {% for item in prediction.top_scorelines %}
+            <li>{{ item.home_goals }}-{{ item.away_goals }} ({{ (item.probability * 100) | round(2) }}%)</li>
+            {% endfor %}
+          </ol>
+        </div>
+        {% endif %}
+      </section>
+
+      <section class="card">
+        <h2>Standings</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Team</th>
+              <th>Pts</th>
+              <th>P</th>
+              <th>W</th>
+              <th>D</th>
+              <th>L</th>
+              <th>GF</th>
+              <th>GA</th>
+              <th>GD</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in standings %}
+            <tr>
+              <td>{{ row.team.name }}</td>
+              <td>{{ row.points }}</td>
+              <td>{{ row.played }}</td>
+              <td>{{ row.wins }}</td>
+              <td>{{ row.draws }}</td>
+              <td>{{ row.losses }}</td>
+              <td>{{ row.goals_for }}</td>
+              <td>{{ row.goals_against }}</td>
+              <td>{{ row.goal_difference }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </section>
+
+      <section class="card split">
+        <div>
+          <h2>Teams</h2>
+          <ul class="list">
+            {% for team in teams %}
+            <li>
+              <strong>{{ team.name }}</strong>
+              <span>{{ team.country }} · {{ team.league }}</span>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+        <div>
+          <h2>Recent matches</h2>
+          <ul class="list">
+            {% for match in matches %}
+            <li>
+              <strong>{{ match.home_team.short_name }} {{ match.home_goals if match.home_goals is not none else '-' }}
+                : {{ match.away_goals if match.away_goals is not none else '-' }} {{ match.away_team.short_name }}</strong>
+              <span>{{ match.match_date }} · {{ match.status.value }}</span>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
