@@ -1,7 +1,7 @@
 from datetime import date
 
-import pytest
 from fastapi import HTTPException
+import pytest
 
 from app.db.base import Base
 from app.models import Match, MatchStatus, Team
@@ -16,18 +16,35 @@ async def test_prediction_endpoint_returns_probabilities(client):
     data = response.json()
     assert data["home_team"]["name"] == "Arsenal"
     total = sum(data["probabilities"].values())
-    assert 0.9 <= total <= 1.0
+    assert 0.99 <= total <= 1.01
     assert len(data["top_scorelines"]) == 5
+    assert data["model_info"]["name"] == "improved_poisson"
 
 
 @pytest.mark.anyio
 async def test_basic_model_calculation(session_factory):
     async with session_factory() as session:
         service = PredictionService(session)
-        result = await service.predict_match(1, 2)
-    assert result.expected_home_goals > 0
-    assert result.expected_away_goals > 0
-    assert result.model_info.historical_matches_used >= 20
+        result = await service.compare_models(1, 2)
+    assert result.basic_poisson.expected_home_goals > 0
+    assert result.improved_poisson.expected_home_goals > 0
+    assert result.elo_based.expected_away_goals > 0
+    assert result.basic_poisson.model_info.historical_matches_used >= 20
+
+
+@pytest.mark.anyio
+async def test_compare_endpoint_returns_all_models(client):
+    response = await client.get("/api/v1/predictions/compare/1/2")
+    assert response.status_code == 200
+    data = response.json()
+    assert set(data) == {
+        "basic_poisson",
+        "improved_poisson",
+        "elo_based",
+    }
+    assert data["basic_poisson"]["model_info"]["name"] == "basic_poisson"
+    assert data["improved_poisson"]["model_info"]["name"] == "improved_poisson"
+    assert data["elo_based"]["model_info"]["name"] == "elo_based"
 
 
 @pytest.mark.anyio

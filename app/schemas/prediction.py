@@ -36,3 +36,9 @@ class PredictionRead(BaseModel):
     probabilities: ProbabilityRead
     top_scorelines: list[ScorelineRead]
     model_info: ModelInfoRead
+
+
+class ModelComparisonRead(BaseModel):
+    basic_poisson: PredictionRead
+    improved_poisson: PredictionRead
+    elo_based: PredictionRead
