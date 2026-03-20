@@ -31,11 +31,11 @@ class Settings(BaseSettings):
     admin_token: str = Field(default="super-secret-admin-token")
     database_url: str = Field(
         default=(
-            "postgresql+asyncpg://postgres:postgres@db:5432/"
+            "postgresql+asyncpg://postgres:postgres@localhost:5433/"
             "football_analytics"
         )
     )
-    redis_url: str = Field(default="redis://redis:6379/0")
+    redis_url: str = Field(default="redis://localhost:6379/0")
     api_v1_prefix: str = Field(default="/api/v1")
     telegram_bot_token: str | None = Field(default=None)
     enable_telegram_bot: bool = Field(default=False)

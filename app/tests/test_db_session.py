@@ -4,7 +4,7 @@ from app.db.session import build_engine_kwargs
 def test_build_engine_kwargs_for_postgres_enables_pool_health_checks():
     kwargs = build_engine_kwargs(
         database_url=(
-            "postgresql+asyncpg://postgres:postgres@db:5432/"
+            "postgresql+asyncpg://postgres:postgres@localhost:5433/"
             "football_analytics"
         ),
         debug=False,

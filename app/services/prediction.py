@@ -1,5 +1,5 @@
-import math
 from dataclasses import dataclass
+import math
 
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
