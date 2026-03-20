@@ -70,6 +70,11 @@ button {
   font-weight: 700;
 }
 
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 table {
   border-collapse: collapse;
   width: 100%;
@@ -96,9 +101,78 @@ td {
   margin-top: 0.15rem;
 }
 
-.prediction-result {
+.prediction-result,
+.comparison-panel {
   background: #eef5ff;
   border-radius: 14px;
   margin-top: 1rem;
   padding: 1rem;
+}
+
+.comparison-header p,
+.comparison-card-header span,
+.comparison-scoreline {
+  color: var(--muted);
+}
+
+.comparison-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  margin-top: 1rem;
+}
+
+.comparison-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1rem;
+}
+
+.comparison-card-header {
+  align-items: start;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
+.comparison-card-header h4,
+.comparison-xg,
+.comparison-scoreline,
+.comparison-stats {
+  margin: 0;
+}
+
+.comparison-stats {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 1rem 0;
+}
+
+.comparison-stats div {
+  background: var(--bg);
+  border-radius: 12px;
+  padding: 0.75rem;
+}
+
+.comparison-stats dt {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.comparison-stats dd {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0.35rem 0 0;
+}
+
+@media (max-width: 640px) {
+  .layout {
+    padding: 1rem;
+  }
+
+  .hero {
+    padding: 2rem 1rem;
+  }
 }

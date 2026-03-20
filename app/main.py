@@ -19,7 +19,7 @@ from app.core.logging import configure_logging
 from app.db.redis import close_redis
 from app.db.session import AsyncSessionLocal
 from app.models import MatchStatus
-from app.schemas.prediction import PredictionRequest
+from app.schemas.prediction import ModelComparisonRead, PredictionRequest
 from app.services.match import MatchService
 from app.services.prediction import PredictionService
 from app.services.seed import SeedService
@@ -62,6 +62,7 @@ async def _build_dashboard_context(
     standings_service: StandingsService,
     *,
     prediction=None,
+    model_comparison: ModelComparisonRead | None = None,
     prediction_error: str | None = None,
     selected_home_team_id: int | None = None,
     selected_away_team_id: int | None = None,
@@ -84,6 +85,7 @@ async def _build_dashboard_context(
         "upcoming_matches": upcoming_matches,
         "standings": standings,
         "prediction": prediction,
+        "model_comparison": model_comparison,
         "prediction_error": prediction_error,
         "selected_home_team_id": selected_home_team_id,
         "selected_away_team_id": selected_away_team_id,
@@ -117,6 +119,7 @@ async def dashboard_prediction(
     prediction_service: PredictionService = Depends(get_prediction_service),
 ) -> HTMLResponse:
     prediction = None
+    model_comparison = None
     prediction_error = None
     try:
         payload = PredictionRequest(
@@ -124,6 +127,10 @@ async def dashboard_prediction(
             away_team_id=away_team_id,
         )
         prediction = await prediction_service.predict_match(
+            payload.home_team_id,
+            payload.away_team_id,
+        )
+        model_comparison = await prediction_service.compare_models(
             payload.home_team_id,
             payload.away_team_id,
         )
@@ -138,6 +145,7 @@ async def dashboard_prediction(
         match_service,
         standings_service,
         prediction=prediction,
+        model_comparison=model_comparison,
         prediction_error=prediction_error,
         selected_home_team_id=home_team_id,
         selected_away_team_id=away_team_id,

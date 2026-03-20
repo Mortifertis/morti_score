@@ -93,6 +93,60 @@
           </ol>
         </div>
         {% endif %}
+
+        {% if model_comparison %}
+        <div class="comparison-panel">
+          <div class="comparison-header">
+            <div>
+              <h3>Compare models</h3>
+              <p>
+                Compare the same matchup across basic Poisson, improved
+                Poisson, and Elo-based forecasts.
+              </p>
+            </div>
+          </div>
+          <div class="comparison-grid">
+            {% for item in [
+              model_comparison.basic_poisson,
+              model_comparison.improved_poisson,
+              model_comparison.elo_based,
+            ] %}
+            <article class="comparison-card">
+              <div class="comparison-card-header">
+                <h4>{{ item.model_info.name }}</h4>
+                <span>
+                  {{ item.model_info.historical_matches_used }} matches
+                </span>
+              </div>
+              <p class="comparison-xg">
+                xG: {{ item.expected_home_goals }} -
+                {{ item.expected_away_goals }}
+              </p>
+              <dl class="comparison-stats">
+                <div>
+                  <dt>Home</dt>
+                  <dd>{{ (item.probabilities.home_win * 100) | round(1) }}%</dd>
+                </div>
+                <div>
+                  <dt>Draw</dt>
+                  <dd>{{ (item.probabilities.draw * 100) | round(1) }}%</dd>
+                </div>
+                <div>
+                  <dt>Away</dt>
+                  <dd>{{ (item.probabilities.away_win * 100) | round(1) }}%</dd>
+                </div>
+              </dl>
+              <p class="comparison-scoreline">
+                Top scoreline:
+                {{ item.top_scorelines[0].home_goals }}-
+                {{ item.top_scorelines[0].away_goals }}
+                ({{ (item.top_scorelines[0].probability * 100) | round(2) }}%)
+              </p>
+            </article>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
       </section>
 
       <section class="card">
