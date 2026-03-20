@@ -128,7 +128,23 @@ async def test_prediction_fails_for_team_without_enough_history(
     assert exc_info.value.detail == {
         "code": "insufficient_away_team_history",
         "message": (
-            "Away team does not have enough historical matches for "
-            "prediction."
+            "Away team does not have enough historical matches for prediction."
         ),
     }
+
+
+@pytest.mark.anyio
+async def test_normalize_probabilities_keeps_total_near_one(session_factory):
+    async with session_factory() as session:
+        service = PredictionService(session)
+
+    home_win, draw, away_win = service._normalize_probabilities(
+        home_win=0.42,
+        draw=0.23,
+        away_win=0.19,
+    )
+
+    total = home_win + draw + away_win
+
+    assert 0.9999 <= total <= 1.0001
+    assert draw > 0.23

@@ -56,6 +56,7 @@ class PredictionService:
     MIN_TEAM_MATCHES = 2
     ROLLING_WINDOW = 8
     DRAW_FACTOR = 0.24
+    MIN_PROBABILITY_SUM = 0.0001
     ELO_BASE_RATING = 1500.0
     ELO_K_FACTOR = 28.0
     HOME_ADVANTAGE_ELO = 55.0
@@ -643,6 +644,28 @@ class PredictionService:
             / math.factorial(goals)
         )
 
+    def _normalize_probabilities(
+        self,
+        *,
+        home_win: float,
+        draw: float,
+        away_win: float,
+    ) -> tuple[float, float, float]:
+        total_probability = home_win + draw + away_win
+        adjusted_draw = min(
+            draw + self.DRAW_FACTOR * (1 - total_probability),
+            1,
+        )
+        remainder = max(
+            home_win + adjusted_draw + away_win,
+            self.MIN_PROBABILITY_SUM,
+        )
+        return (
+            home_win / remainder,
+            adjusted_draw / remainder,
+            away_win / remainder,
+        )
+
     def _score_matrix(
         self,
         expected_home_goals: float,
@@ -672,13 +695,11 @@ class PredictionService:
                     draw += probability
                 else:
                     away_win += probability
-        draw = min(
-            draw + self.DRAW_FACTOR * (1 - (home_win + draw + away_win)), 1
+        home_win, draw, away_win = self._normalize_probabilities(
+            home_win=home_win,
+            draw=draw,
+            away_win=away_win,
         )
-        remainder = max(home_win + draw + away_win, 0.0001)
-        home_win /= remainder
-        draw /= remainder
-        away_win /= remainder
         scorelines.sort(key=lambda item: item.probability, reverse=True)
         return (
             ProbabilityRead(
