@@ -20,4 +20,4 @@ COPY tests ./tests
 RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir -e .[dev]
 
-CMD ["bash", "-lc", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+CMD ["bash", "-lc", "python scripts/run_migrations.py && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
