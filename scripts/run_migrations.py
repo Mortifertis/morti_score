@@ -2,11 +2,10 @@ import asyncio
 from collections.abc import Iterable
 from pathlib import Path
 
-from alembic.config import Config
 from sqlalchemy import inspect
 from sqlalchemy.ext.asyncio import create_async_engine
 
-from alembic import command
+from alembic.config import Config
 from app.core.config import get_settings
 
 EXPECTED_TABLES = (
@@ -50,6 +49,8 @@ def build_alembic_config(database_url: str) -> Config:
 
 
 def run_migrations() -> str:
+    from alembic import command
+
     settings = get_settings()
     config = build_alembic_config(settings.database_url)
 

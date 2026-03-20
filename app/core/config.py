@@ -1,12 +1,24 @@
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+DEFAULT_ENV_FILES = (
+    ".env",
+    ".env.example",
+)
+
+
+def get_existing_env_files() -> tuple[str, ...]:
+    return tuple(
+        env_file for env_file in DEFAULT_ENV_FILES if Path(env_file).exists()
+    )
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=get_existing_env_files(),
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",
