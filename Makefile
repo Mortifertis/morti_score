@@ -11,7 +11,7 @@ format:
 
 lint:
 	ruff check .
-	$(PYTHON) -m flake8 . || echo "flake8 is not installed"
+	$(PYTHON) -m flake8 .
 	black --check .
 	isort --check-only .
 
