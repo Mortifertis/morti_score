@@ -4,6 +4,7 @@ import logging
 from aiogram import Bot, Dispatcher
 from aiogram.filters import Command
 from aiogram.types import Message
+from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.core.config import get_settings
@@ -42,13 +43,22 @@ def create_dispatcher(
                 "Usage: /predict <home_team_id> <away_team_id>"
             )
             return
-        home_team_id = int(parts[1])
-        away_team_id = int(parts[2])
-        async with session_factory() as session:
-            service = PredictionService(session)
-            prediction = await service.predict_match(
-                home_team_id, away_team_id
-            )
+        try:
+            home_team_id = int(parts[1])
+            away_team_id = int(parts[2])
+        except ValueError:
+            await message.answer("Team IDs must be integer values.")
+            return
+
+        try:
+            async with session_factory() as session:
+                service = PredictionService(session)
+                prediction = await service.predict_match(
+                    home_team_id, away_team_id
+                )
+        except HTTPException as exc:
+            await message.answer(f"Prediction error: {exc.detail}")
+            return
         lines = [
             f"{prediction.home_team.name} vs {prediction.away_team.name}",
             (

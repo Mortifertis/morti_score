@@ -1,8 +1,17 @@
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+PLACEHOLDER_SECRET_VALUES = frozenset(
+    {
+        "change-me",
+        "super-secret-admin-token",
+        "replace-with-local-dev-secret-key",
+        "replace-with-local-dev-admin-token",
+    }
+)
 
 DEFAULT_ENV_FILES = (
     ".env",
@@ -42,6 +51,26 @@ class Settings(BaseSettings):
     seed_on_startup: bool = Field(default=True)
     log_level: str = Field(default="INFO")
     cache_ttl_seconds: int = Field(default=300)
+
+    @model_validator(mode="after")
+    def require_production_secrets(self) -> "Settings":
+        if self.app_env.lower() != "production":
+            return self
+
+        unsafe_fields = []
+        if self.secret_key in PLACEHOLDER_SECRET_VALUES:
+            unsafe_fields.append("SECRET_KEY")
+        if self.admin_token in PLACEHOLDER_SECRET_VALUES:
+            unsafe_fields.append("ADMIN_TOKEN")
+
+        if unsafe_fields:
+            joined_fields = ", ".join(unsafe_fields)
+            raise ValueError(
+                f"Production environment requires non-placeholder values for "
+                f"{joined_fields}."
+            )
+
+        return self
 
 
 @lru_cache(maxsize=1)

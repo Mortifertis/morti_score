@@ -29,3 +29,28 @@ def test_settings_load_from_example_when_env_is_missing(
     settings = Settings(_env_file=(tmp_path / ".env", example_file))
 
     assert settings.app_name == "Fallback App"
+
+
+def test_production_settings_reject_placeholder_secrets() -> None:
+    try:
+        Settings(
+            app_env="production",
+            secret_key="replace-with-local-dev-secret-key",
+            admin_token="replace-with-local-dev-admin-token",
+            _env_file=None,
+        )
+    except ValueError as exc:
+        assert "SECRET_KEY, ADMIN_TOKEN" in str(exc)
+    else:
+        raise AssertionError("Production placeholder secrets were accepted")
+
+
+def test_production_settings_accept_custom_secrets() -> None:
+    settings = Settings(
+        app_env="production",
+        secret_key="portfolio-secret-key",
+        admin_token="portfolio-admin-token",
+        _env_file=None,
+    )
+
+    assert settings.app_env == "production"
