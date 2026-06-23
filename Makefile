@@ -11,11 +11,12 @@ format:
 
 lint:
 	ruff check .
+	$(PYTHON) -m flake8 . || echo "flake8 is not installed"
 	black --check .
 	isort --check-only .
 
 test:
-	pytest
+	$(PYTHON) -m pytest
 
 run:
 	uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload

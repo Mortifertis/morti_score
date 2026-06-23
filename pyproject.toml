@@ -33,6 +33,7 @@ dev = [
   "isort>=5.13.2,<6.0.0",
   "pytest>=8.3.4,<9.0.0",
   "pytest-asyncio>=0.25.0,<1.0.0",
+  "flake8>=7.1.1,<8.0.0",
   "ruff>=0.8.4,<1.0.0",
 ]
 
@@ -64,4 +65,5 @@ force-sort-within-sections = true
 "scripts/run_migrations.py" = ["I001"]
 
 [tool.pytest.ini_options]
+pythonpath = ["."]
 testpaths = ["tests"]

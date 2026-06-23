@@ -5,7 +5,7 @@ from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.redis import get_redis
-from app.models import Match, MatchStatus
+from app.models import Match, MatchStatus, Team
 from app.repositories.match import MatchRepository
 from app.repositories.team import TeamRepository
 from app.schemas.prediction import (
@@ -155,7 +155,7 @@ class PredictionService:
         self,
         home_team_id: int,
         away_team_id: int,
-    ) -> tuple[object, object, list[Match]]:
+    ) -> tuple[Team, Team, list[Match]]:
         home_team = await self.team_repository.get_team(home_team_id)
         away_team = await self.team_repository.get_team(away_team_id)
         if home_team is None:
@@ -207,8 +207,8 @@ class PredictionService:
     def _build_basic_prediction(
         self,
         *,
-        home_team,
-        away_team,
+        home_team: Team,
+        away_team: Team,
         home_team_id: int,
         away_team_id: int,
         matches: list[Match],
@@ -244,8 +244,8 @@ class PredictionService:
     def _build_improved_prediction(
         self,
         *,
-        home_team,
-        away_team,
+        home_team: Team,
+        away_team: Team,
         home_team_id: int,
         away_team_id: int,
         matches: list[Match],
@@ -323,8 +323,8 @@ class PredictionService:
     def _build_elo_prediction(
         self,
         *,
-        home_team,
-        away_team,
+        home_team: Team,
+        away_team: Team,
         home_team_id: int,
         away_team_id: int,
         matches: list[Match],
@@ -363,8 +363,8 @@ class PredictionService:
     def _build_prediction_response(
         self,
         *,
-        home_team,
-        away_team,
+        home_team: Team,
+        away_team: Team,
         model_name: str,
         historical_matches_used: int,
         expected_home_goals: float,
