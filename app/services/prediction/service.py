@@ -24,11 +24,7 @@ from app.services.prediction.models import (
     EloModel,
     ImprovedPoissonModel,
 )
-from app.services.prediction.models.helpers import build_basic_metrics
-from app.services.prediction.score_matrix import (
-    build_score_matrix,
-    normalize_probabilities,
-)
+from app.services.prediction.score_matrix import build_score_matrix
 
 
 class PredictionModel(Protocol):
@@ -191,22 +187,6 @@ class PredictionService:
                     "for the selected teams."
                 ),
             )
-
-    def _build_basic_metrics(self, matches: list[Match]):
-        return build_basic_metrics(matches)
-
-    def _normalize_probabilities(
-        self,
-        *,
-        home_win: float,
-        draw: float,
-        away_win: float,
-    ) -> tuple[float, float, float]:
-        return normalize_probabilities(
-            home_win=home_win,
-            draw=draw,
-            away_win=away_win,
-        )
 
     async def clear_cached_predictions(self) -> None:
         await self.cache.clear()

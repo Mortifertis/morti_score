@@ -6,6 +6,7 @@ import pytest
 from app.db.base import Base
 from app.models import Match, MatchStatus, Team
 from app.services.prediction import PredictionService
+from app.services.prediction.score_matrix import normalize_probabilities
 from app.services.seed import SeedService
 
 
@@ -133,12 +134,8 @@ async def test_prediction_fails_for_team_without_enough_history(
     }
 
 
-@pytest.mark.anyio
-async def test_normalize_probabilities_keeps_total_near_one(session_factory):
-    async with session_factory() as session:
-        service = PredictionService(session)
-
-    home_win, draw, away_win = service._normalize_probabilities(
+def test_normalize_probabilities_keeps_total_near_one():
+    home_win, draw, away_win = normalize_probabilities(
         home_win=0.42,
         draw=0.23,
         away_win=0.19,

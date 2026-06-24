@@ -28,6 +28,5 @@ class PredictionCache:
 
     async def clear(self) -> None:
         redis = await get_redis()
-        keys = await redis.keys("prediction:*")
-        if keys:
-            await redis.delete(*keys)
+        async for key in redis.scan_iter("prediction:*"):
+            await redis.delete(key)

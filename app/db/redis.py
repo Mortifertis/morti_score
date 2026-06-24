@@ -1,3 +1,4 @@
+from collections.abc import AsyncIterator
 import logging
 
 from redis.asyncio import Redis
@@ -22,10 +23,13 @@ class InMemoryRedis:
         for key in keys:
             self.store.pop(key, None)
 
-    async def keys(self, pattern: str) -> list[str]:
-        if pattern == "prediction:*":
-            return [key for key in self.store if key.startswith("prediction:")]
-        return [key for key in self.store if key == pattern]
+    async def scan_iter(self, match: str) -> AsyncIterator[str]:
+        if match == "prediction:*":
+            keys = [key for key in self.store if key.startswith("prediction:")]
+        else:
+            keys = [key for key in self.store if key == match]
+        for key in keys:
+            yield key
 
     async def close(self) -> None:
         self.store.clear()
