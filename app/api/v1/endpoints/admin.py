@@ -1,5 +1,4 @@
 from fastapi import APIRouter, BackgroundTasks, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import (
     get_prediction_service,
@@ -7,7 +6,6 @@ from app.api.deps import (
     get_standings_service,
 )
 from app.core.security import verify_admin_token
-from app.db.session import get_db_session
 from app.schemas import MessageResponse
 from app.services.prediction import PredictionService
 from app.services.seed import SeedService
@@ -36,9 +34,8 @@ async def seed_data(
 )
 async def rebuild_standings(
     background_tasks: BackgroundTasks,
-    session: AsyncSession = Depends(get_db_session),
 ) -> MessageResponse:
-    background_tasks.add_task(rebuild_standings_task, session)
+    background_tasks.add_task(rebuild_standings_task)
     return MessageResponse(message="Standings rebuild started")
 
 
@@ -49,11 +46,10 @@ async def rebuild_standings(
 )
 async def recalculate_model(
     background_tasks: BackgroundTasks,
-    session: AsyncSession = Depends(get_db_session),
     service: PredictionService = Depends(get_prediction_service),
     standings_service: StandingsService = Depends(get_standings_service),
 ) -> MessageResponse:
     await service.clear_cached_predictions()
     await standings_service.list_standings()
-    background_tasks.add_task(recalculate_model_task, session)
+    background_tasks.add_task(recalculate_model_task)
     return MessageResponse(message="Prediction model cache reset")

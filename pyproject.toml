@@ -3,9 +3,9 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "football-analytics-platform"
+name = "morti-score"
 version = "0.1.0"
-description = "FastAPI football analytics MVP with dashboard and bot"
+description = "FastAPI football analytics backend with dashboard, Poisson/Elo predictions, PostgreSQL, Redis and Alembic"
 readme = "README.md"
 requires-python = ">=3.12"
 authors = [{ name = "Mortifertis" }]

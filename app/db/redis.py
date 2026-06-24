@@ -47,6 +47,12 @@ async def get_redis() -> Redis | InMemoryRedis:
             await client.ping()
             _redis_client = client
         except RedisError:
+            await client.aclose()
+            if not settings.cache_fallback_enabled:
+                logger.exception(
+                    "Redis unavailable and cache fallback is disabled"
+                )
+                raise
             logger.warning("Redis unavailable, using in-memory cache fallback")
             _redis_client = InMemoryRedis()
     return _redis_client

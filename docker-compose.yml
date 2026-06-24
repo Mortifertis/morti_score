@@ -17,9 +17,7 @@ services:
       db:
         condition: service_healthy
       redis:
-        condition: service_started
-    volumes:
-      - ./:/app
+        condition: service_healthy
     command: >
       bash -lc "python scripts/run_migrations.py &&
       uvicorn app.main:app --host 0.0.0.0 --port 8000"
@@ -49,6 +47,11 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
 volumes:
   postgres_data:

@@ -51,6 +51,7 @@ class Settings(BaseSettings):
     seed_on_startup: bool = Field(default=True)
     log_level: str = Field(default="INFO")
     cache_ttl_seconds: int = Field(default=300)
+    cache_fallback_enabled: bool = Field(default=True)
 
     @model_validator(mode="after")
     def require_production_secrets(self) -> "Settings":
