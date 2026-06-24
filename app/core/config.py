@@ -13,10 +13,7 @@ PLACEHOLDER_SECRET_VALUES = frozenset(
     }
 )
 
-DEFAULT_ENV_FILES = (
-    ".env",
-    ".env.example",
-)
+DEFAULT_ENV_FILES = (".env",)
 
 
 def get_existing_env_files() -> tuple[str, ...]:
@@ -48,7 +45,7 @@ class Settings(BaseSettings):
     api_v1_prefix: str = Field(default="/api/v1")
     telegram_bot_token: str | None = Field(default=None)
     enable_telegram_bot: bool = Field(default=False)
-    seed_on_startup: bool = Field(default=True)
+    seed_on_startup: bool = Field(default=False)
     log_level: str = Field(default="INFO")
     cache_ttl_seconds: int = Field(default=300)
     cache_fallback_enabled: bool = Field(default=True)

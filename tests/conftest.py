@@ -12,8 +12,6 @@ from app.db.session import get_db_session
 from app.main import app
 from app.services.seed import SeedService
 
-TEST_DATABASE_URL = "sqlite+aiosqlite:///./test.db"
-
 
 @pytest.fixture(scope="session")
 def anyio_backend() -> str:
@@ -21,8 +19,10 @@ def anyio_backend() -> str:
 
 
 @pytest.fixture(scope="session")
-async def session_factory():
-    engine = create_async_engine(TEST_DATABASE_URL, future=True)
+async def session_factory(tmp_path_factory):
+    database_path = tmp_path_factory.mktemp("db") / "test.db"
+    database_url = f"sqlite+aiosqlite:///{database_path}"
+    engine = create_async_engine(database_url, future=True)
     async with engine.begin() as connection:
         await connection.run_sync(Base.metadata.drop_all)
         await connection.run_sync(Base.metadata.create_all)

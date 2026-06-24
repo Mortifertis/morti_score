@@ -13,7 +13,6 @@ from app.api.deps import (
     get_team_service,
 )
 from app.api.router import router as api_router
-from app.bot.telegram_bot import launch_bot
 from app.core.config import get_settings
 from app.core.logging import configure_logging
 from app.db.redis import close_redis
@@ -44,6 +43,8 @@ async def lifespan(_: FastAPI):
                 logger.exception("Failed to seed startup data: %s", exc)
                 raise
     if settings.enable_telegram_bot and settings.telegram_bot_token:
+        from app.bot.telegram_bot import launch_bot
+
         bot_task = launch_bot(AsyncSessionLocal)
     yield
     if bot_task is not None:
