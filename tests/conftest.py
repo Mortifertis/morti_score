@@ -51,3 +51,4 @@ async def client(session_factory):
     ) as async_client:
         yield async_client
     app.dependency_overrides.clear()
+    
