@@ -1,12 +1,12 @@
-# Changelog
+# Журнал изменений
 
 ## v0.1.0 - 2026-06-24
 
-### Added
+### Добавлено
 
-- FastAPI REST API for teams, matches, standings and predictions.
-- Jinja2 dashboard.
-- PostgreSQL and Redis Docker Compose setup.
-- Alembic migrations.
-- Poisson and Elo-based statistical prediction models.
-- CI pipeline with linting and tests.
+- REST API на FastAPI для команд, матчей, турнирной таблицы и прогнозов.
+- Дашборд на Jinja2.
+- Конфигурация Docker Compose для PostgreSQL и Redis.
+- Миграции Alembic.
+- Статистические модели прогнозирования на основе Poisson и Elo.
+- CI-пайплайн с линтингом и тестами.

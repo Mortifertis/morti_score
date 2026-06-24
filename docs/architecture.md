@@ -1,55 +1,56 @@
-# Architecture
+# Архитектура
 
-Morti Score is organized as a layered FastAPI application. The code separates
-HTTP routing, business logic, data access, persistence models and response
-schemas so that each layer has a focused responsibility.
+Morti Score организован как многослойное приложение на FastAPI. Код разделяет
+HTTP-маршрутизацию, бизнес-логику, доступ к данным, модели хранения и схемы
+ответов, чтобы у каждого слоя была понятная зона ответственности.
 
-## Request flow
+## Поток запроса
 
 ```text
 Client -> FastAPI router -> service -> repository -> database
 ```
 
-Routers parse HTTP input and call services. Services contain business logic and
-orchestration. Repositories isolate SQLAlchemy queries. Pydantic schemas define
-request and response contracts.
+Роутеры разбирают HTTP-входные данные и вызывают сервисы. Сервисы содержат
+бизнес-логику и оркестрацию. Репозитории изолируют SQLAlchemy-запросы.
+Pydantic-схемы задают контракты запросов и ответов.
 
-## Prediction flow
+## Поток прогнозирования
 
 ```text
 Prediction endpoint
   -> PredictionService
   -> PredictionContextLoader
-  -> team/match repositories
-  -> model calculator
+  -> репозитории команд и матчей
+  -> калькулятор модели
   -> Redis cache
-  -> response schema
+  -> схема ответа
 ```
 
-`PredictionService` validates the matchup, checks the prediction cache, loads
-teams and finished matches, delegates expected-goal calculation to the selected
-model, builds the score matrix and returns a `PredictionRead` schema.
+`PredictionService` валидирует пару команд, проверяет кэш прогнозов, загружает
+команды и завершённые матчи, передаёт расчёт ожидаемых голов выбранной модели,
+строит матрицу счёта и возвращает схему `PredictionRead`.
 
-The prediction package is split into focused modules:
+Пакет прогнозирования разделён на специализированные модули:
 
-- `service.py` for orchestration;
-- `cache.py` for Redis-backed prediction cache operations;
-- `context.py` for loading teams and historical matches;
-- `models/` for basic Poisson, improved Poisson and Elo calculators;
-- `score_matrix.py` for Poisson scoreline probabilities;
-- `errors.py`, `constants.py` and `types.py` for shared support code.
+- `service.py` — оркестрация;
+- `cache.py` — операции с кэшем прогнозов на базе Redis;
+- `context.py` — загрузка команд и исторических матчей;
+- `models/` — калькуляторы базовой Poisson-модели, улучшенной
+  Poisson-модели и Elo;
+- `score_matrix.py` — вероятности счёта на основе распределения Poisson;
+- `errors.py`, `constants.py` и `types.py` — общий вспомогательный код.
 
-## Dashboard flow
+## Поток дашборда
 
 ```text
 Dashboard route -> services -> Jinja2 template
 ```
 
-The dashboard route collects teams, matches and standings through service
-objects, then renders a Jinja2 template. It is intended as a quick visual demo
-of the same data exposed by the API.
+Маршрут дашборда собирает команды, матчи и турнирную таблицу через сервисные
+объекты, а затем рендерит Jinja2-шаблон. Дашборд предназначен как быстрая
+визуальная демонстрация тех же данных, которые доступны через API.
 
-## Infrastructure
+## Инфраструктура
 
 The application is designed to run as:
 
@@ -57,6 +58,7 @@ The application is designed to run as:
 FastAPI app + PostgreSQL + Redis via Docker Compose
 ```
 
-PostgreSQL stores application data. Redis caches prediction responses. Alembic
-manages database migrations. For local development and tests, the project can
-also use SQLite and an in-memory Redis fallback when configured.
+PostgreSQL хранит данные приложения. Redis кэширует ответы прогнозов. Alembic
+управляет миграциями базы данных. Для локальной разработки и тестов проект
+также может использовать SQLite и in-memory Redis fallback, если это
+задано в конфигурации.
