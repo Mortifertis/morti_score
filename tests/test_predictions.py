@@ -148,3 +148,43 @@ async def test_normalize_probabilities_keeps_total_near_one(session_factory):
 
     assert 0.9999 <= total <= 1.0001
     assert draw > 0.23
+
+
+class BrokenPredictionRedisClient:
+    async def ping(self) -> None:
+        from redis.exceptions import RedisError
+
+        raise RedisError("redis is unavailable")
+
+    async def aclose(self) -> None:
+        return None
+
+
+@pytest.mark.anyio
+async def test_prediction_raises_when_cache_fallback_disabled(
+    monkeypatch,
+    session_factory,
+):
+    from redis.exceptions import RedisError
+
+    from app.core.config import Settings
+    from app.db import redis as redis_module
+
+    await redis_module.close_redis()
+    monkeypatch.setattr(
+        redis_module,
+        "get_settings",
+        lambda: Settings(cache_fallback_enabled=False, _env_file=None),
+    )
+    monkeypatch.setattr(
+        redis_module.Redis,
+        "from_url",
+        lambda *args, **kwargs: BrokenPredictionRedisClient(),
+    )
+
+    async with session_factory() as session:
+        service = PredictionService(session)
+        with pytest.raises(RedisError):
+            await service.predict_match(1, 2)
+
+    await redis_module.close_redis()

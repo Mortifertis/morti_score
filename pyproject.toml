@@ -39,8 +39,8 @@ bot = [
   "aiogram>=3.13.1,<4.0.0",
 ]
 
-[tool.setuptools]
-packages = ["app"]
+[tool.setuptools.packages.find]
+include = ["app*"]
 
 [tool.black]
 line-length = 79

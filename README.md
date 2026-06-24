@@ -110,6 +110,29 @@ make run       # запуск uvicorn в режиме reload
   всех моделей прогнозирования.
 - `POST /api/v1/admin/seed-data` — загрузка демонстрационных данных.
 
+### Примеры API-запросов
+
+Получить список команд:
+
+```bash
+curl http://127.0.0.1:8000/api/v1/teams
+```
+
+Получить прогноз матча:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/v1/predictions/match \
+  -H "Content-Type: application/json" \
+  -d '{"home_team_id": 1, "away_team_id": 2}'
+```
+
+Загрузить демонстрационные данные через admin endpoint:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/v1/admin/seed-data \
+  -H "X-Admin-Token: replace-with-local-dev-admin-token"
+```
+
 ## Структура проекта
 
 ```text
